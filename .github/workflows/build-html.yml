@@ -1,0 +1,49 @@
+name: Build HTML
+
+on:
+  workflow_dispatch:
+    inputs:
+      project_name:
+        description: 'Nama project'
+        required: true
+        default: 'webapp'
+      mode:
+        description: 'Mode'
+        required: true
+        default: 'release'
+      builder:
+        description: 'Nama builder'
+        required: true
+        default: 'User'
+      asset_url:
+        description: 'URL ZIP'
+        required: true
+      chat_id:
+        description: 'Chat ID'
+        required: false
+        default: '0'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Download ZIP
+        run: |
+          curl -L -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -o project.zip "${{ inputs.asset_url }}"
+          mkdir -p out
+          unzip -q project.zip -d out
+          ls -la out
+
+      - name: Zip hasil deploy
+        run: |
+          cd out
+          zip -r "../${{ inputs.project_name }}-html.zip" . -x "*.git*"
+          ls -lh ../*.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-${{ inputs.project_name }}
+          path: ${{ inputs.project_name }}-html.zip
+          retention-days: 7
